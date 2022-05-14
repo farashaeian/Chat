@@ -36,6 +36,11 @@ class AddUserModelSerializer(serializers.ModelSerializer):
         fields = ['groups']
 
 
+class UserGroupsModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'groups']
+
 
 class ChatModelSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
@@ -44,12 +49,11 @@ class ChatModelSerializer(serializers.ModelSerializer):
 
     user_message = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
-
     class Meta:
         model = Messages
-        fields = ['text', 'user_message']
+        fields = ['text', 'date', 'user_message']
         extra_kwargs = {
-           'date': {'read_only': True}
+           'date': {'read_only': True},
         }
 
     def validate(self, attrs):

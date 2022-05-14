@@ -22,6 +22,12 @@ class AddUser(generics.UpdateAPIView):
     serializer_class = serializers.AddUserModelSerializer
 
 
+class User_Groups(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = User.objects.all()
+    serializer_class = serializers.UserGroupsModelSerializer
+
+
 class Chat(generics.ListCreateAPIView):
     permission_classes = [MessagePermission]
     serializer_class = serializers.ChatModelSerializer
