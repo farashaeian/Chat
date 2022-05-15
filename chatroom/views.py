@@ -1,7 +1,8 @@
 from . import models
 from . import serializers
+
 from django.contrib.auth.models import User, Group
-from rest_framework import generics, viewsets
+from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from .permissions import MessagePermission
 
@@ -35,5 +36,13 @@ class Chat(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return models.Messages.objects.filter(group_message_id=self.kwargs['pk'])
+"""
 
-
+    def perform_create(self, serializer):
+        serializer.save(user_message=self.request.user)
+queryset=User.objects.all()
+"""
+"""
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+"""
