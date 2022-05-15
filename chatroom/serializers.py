@@ -47,21 +47,9 @@ class ChatModelSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super(ChatModelSerializer, self).__init__( *args, **kwargs)
         self.current_group_id = kwargs['context']['view'].kwargs['pk']
-        #self.queryset
 
-    """attempt to add current user for post and user_meassge be visible for get:"""
-    #user_message = serializers.StringRelatedField(read_only=True, default=serializers.CurrentUserDefault())
-    #user_message = serializers.PrimaryKeyRelatedField(read_only=True,default=serializers.CurrentUserDefault())
     user_message = serializers.PrimaryKeyRelatedField(default=serializers.CurrentUserDefault(),queryset=User.objects.all())
-    #user_message = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
-    """user_message = serializers.PrimaryKeyRelatedField(read_only=True)
-        def __init__(self, *args, **kwargs):
-        self.queryset=.... """
-
-    '''username_message = serializers.PrimaryKeyRelatedField(many=True, queryset=User.objects.all())
-    owner = serializers.ReadOnlyField(source='username_message.username')
-    #add 'owner' to the fields list'''
 
     class Meta:
         model = Messages
