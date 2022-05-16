@@ -5,6 +5,10 @@ from django.contrib.auth.hashers import make_password
 from django.http import request
 
 
+class StatusModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
+        fields = ['message', 'user_status', 'status']
 
 class UserRegisterModelSerializer(serializers.ModelSerializer):
     class Meta:
@@ -31,9 +35,13 @@ class GroupRegisterModelSerializer(serializers.ModelSerializer):
 
 
 class AddUserModelSerializer(serializers.ModelSerializer):
+    message_status = StatusModelSerializer(many=True)
     class Meta:
         model = User
-        fields = ['groups']
+        fields = ['groups', 'message_status']
+
+    def create(self, validated_data):
+        pass
 
 
 class UserGroupsModelSerializer(serializers.ModelSerializer):

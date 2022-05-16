@@ -37,3 +37,5 @@ class Chat(generics.ListCreateAPIView):
     def get_queryset(self):
         return models.Messages.objects.filter(group_message_id=self.kwargs['pk'])
 
+  #  def perform_create(self, serializer):
+  #      serializer.save(group_number = self.request.)

@@ -11,3 +11,9 @@ class Messages(models.Model):
 
     class Meta:
         ordering = ['date']
+
+class Status(models.Model):
+    message = models.ForeignKey(Messages, on_delete=models.CASCADE)
+    user_status = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    status = models.BooleanField(default=False, blank=False, null=False)
+
