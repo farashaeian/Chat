@@ -4,7 +4,7 @@ from django.contrib.auth.models import User, Group
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from .permissions import MessagePermission
-
+from rest_framework.response import Response
 
 class UserRegister(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -22,19 +22,27 @@ class AddUser(generics.UpdateAPIView):
     serializer_class = serializers.AddUserModelSerializer
 
 
-class User_Groups(generics.ListAPIView):
+class UserGroups(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     queryset = User.objects.all()
     serializer_class = serializers.UserGroupsModelSerializer
 
 
 class Chat(generics.ListCreateAPIView):
-    permission_classes = [MessagePermission]
-    serializer_class = serializers.ChatModelSerializer
     queryset = models.Messages.objects.all()
+    serializer_class = serializers.ChatModelSerializer
+    permission_classes = [MessagePermission]
 
     def get_queryset(self):
-        return models.Messages.objects.filter(group_message_id=self.kwargs['pk'])
+        return models.Messages.objects.filter(group_message_id=self.kwargs['pk']).exclude(
+            status=self.request.user.id)
 
-  #  def perform_create(self, serializer):
-  #      serializer.save(group_number = self.request.)
+    def List(self, request):
+        queryset = self.get_queryset()
+        serializer = serializers.ChatModelSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class AddStatus(generics.UpdateAPIView):
+    queryset = models.Messages
+    serializer_class = serializers.AddStatusModelSerializer
