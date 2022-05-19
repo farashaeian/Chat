@@ -1,48 +1,55 @@
-from . import models
-from . import serializers
+from .models import Messages
+from .serializers import UserRegisterModelSerializer, GroupRegisterModelSerializer, AddUserModelSerializer, UserGroupsModelSerializer, ChatModelSerializer
 from django.contrib.auth.models import User, Group
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from .permissions import MessagePermission
 from rest_framework.response import Response
 
+
 class UserRegister(generics.CreateAPIView):
     queryset = User.objects.all()
-    serializer_class = serializers.UserRegisterModelSerializer
+    serializer_class = UserRegisterModelSerializer
 
 
 class GroupRegister(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = serializers.GroupRegisterModelSerializer
     queryset = Group.objects.all()
+    serializer_class = GroupRegisterModelSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class AddUser(generics.UpdateAPIView):
     queryset = User
-    serializer_class = serializers.AddUserModelSerializer
+    serializer_class = AddUserModelSerializer
 
 
 class UserGroups(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
     queryset = User.objects.all()
-    serializer_class = serializers.UserGroupsModelSerializer
+    serializer_class = UserGroupsModelSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class Chat(generics.ListCreateAPIView):
-    queryset = models.Messages.objects.all()
-    serializer_class = serializers.ChatModelSerializer
+    queryset = Messages.objects.all()
+    serializer_class = ChatModelSerializer
     permission_classes = [MessagePermission]
 
     def get_queryset(self):
-        return models.Messages.objects.filter(group_message_id=self.kwargs['pk']).exclude(
+        return Messages.objects.filter(group_message_id=self.kwargs['pk']).exclude(
             status=self.request.user.id)
 
-    def List(self, request):
+    def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = serializers.ChatModelSerializer(queryset, many=True)
+        serializer = ChatModelSerializer(queryset, many=True)
+        # associate retrieved messages to the current user
+        current_user = self.request.user
+        current_user.messages_set.add(*queryset)
+        current_user.save()
         return Response(serializer.data)
 
+    def get_serializer_context(self):
+        context = super(Chat, self).get_serializer_context()
+        context.update({"pk": self.kwargs['pk']})
+        return context
 
-class AddStatus(generics.UpdateAPIView):
-    queryset = models.Messages
-    serializer_class = serializers.AddStatusModelSerializer
+

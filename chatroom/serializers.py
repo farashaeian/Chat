@@ -40,30 +40,25 @@ class UserGroupsModelSerializer(serializers.ModelSerializer):
         fields = ['username', 'groups']
 
 
-class AddStatusModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Messages
-        fields = ['status']
-
-
 class ChatModelSerializer(serializers.ModelSerializer):
-
+    """
     def __init__(self, *args, **kwargs):
         super(ChatModelSerializer, self).__init__( *args, **kwargs)
         self.current_group_id = kwargs['context']['view'].kwargs['pk']
-
+    """
     user_message = serializers.PrimaryKeyRelatedField(default=serializers.CurrentUserDefault(), queryset=User.objects.all())
-
 
     class Meta:
         model = Messages
-        fields = ['text', 'date', 'user_message'] #, 'status'
+        fields = ['text', 'date', 'user_message']
         extra_kwargs = {
             'date': {'read_only': True},
         }
 
     def validate(self, attrs):
-        group = Group.objects.get(id=self.current_group_id)
+        # group = Group.objects.get(id=self.current_group_id)
+        current_group_id = self.context.get("pk")
+        group = Group.objects.get(id=current_group_id)
         attrs['group_message'] = group
         return attrs
 
