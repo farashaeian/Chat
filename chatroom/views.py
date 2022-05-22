@@ -30,7 +30,6 @@ class UserGroups(generics.ListAPIView):
 
 
 class Chat(generics.ListCreateAPIView):
-    queryset = Messages.objects.all()
     serializer_class = ChatModelSerializer
     permission_classes = [MessagePermission]
 

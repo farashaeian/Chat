@@ -1,6 +1,5 @@
 from rest_framework import permissions
-from .models import Messages
-from django.contrib.auth.models import User, Group
+
 
 class MessagePermission(permissions.BasePermission):
     def has_permission(self, request, view):
