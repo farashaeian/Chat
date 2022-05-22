@@ -5,6 +5,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from .permissions import MessagePermission
 from rest_framework.response import Response
+from rest_framework.filters import SearchFilter
 
 
 class UserRegister(generics.CreateAPIView):
@@ -33,6 +34,8 @@ class Chat(generics.ListCreateAPIView):
     queryset = Messages.objects.all()
     serializer_class = ChatModelSerializer
     permission_classes = [MessagePermission]
+    filter_backends = [SearchFilter]
+    search_fields = ['text']
 
     def get_queryset(self):
         return Messages.objects.filter(group_message_id=self.kwargs['pk']).exclude(

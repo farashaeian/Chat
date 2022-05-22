@@ -40,7 +40,12 @@ INSTALLED_APPS = [
     'chatroom.apps.ChatroomConfig',
     'rest_framework',
     'rest_framework.authtoken',
+    'django_filters',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
