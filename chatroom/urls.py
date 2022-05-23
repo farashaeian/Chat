@@ -7,4 +7,5 @@ urlpatterns = [
         path('add_user/<pk>/', views.AddUser.as_view(), name='add_user'),
         path('user_groups/', views.UserGroups.as_view(), name='user_groups'),
         path('chat/<pk>/', views.Chat.as_view(), name='chat'),
+        path('search_message/<pk>/', views.SearchMessage.as_view(), name='search_message'),
 ]

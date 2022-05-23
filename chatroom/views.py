@@ -1,11 +1,17 @@
 from .models import Messages
-from .serializers import UserRegisterModelSerializer, GroupRegisterModelSerializer, AddUserModelSerializer, UserGroupsModelSerializer, ChatModelSerializer
+from .serializers import UserRegisterModelSerializer, GroupRegisterModelSerializer,\
+    AddUserModelSerializer, UserGroupsModelSerializer, ChatModelSerializer, \
+    SearchMessageModelSerializer
 from django.contrib.auth.models import User, Group
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from .permissions import MessagePermission
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
+# from django_filters import FilterSet
+# from rest_framework_filters import filters
+# import rest_framework_filters as filters
+#from rest_framework.pagination import LimitOffsetPagination
 
 
 class UserRegister(generics.CreateAPIView):
@@ -30,12 +36,26 @@ class UserGroups(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
 
+# didn't work in Chat and SearchMessage views:
+"""
+class MessageFilter(filters.FilterSet):
+    class Meta:
+        model = Messages
+        fields = {
+            'date': ['lt', 'gt'],
+            'text': ['exact'],
+        }
+"""
+
+"""
+class ChatPagination(LimitOffsetPagination):
+    max_limit = 5"""
+
+
 class Chat(generics.ListCreateAPIView):
-    queryset = Messages.objects.all()
     serializer_class = ChatModelSerializer
     permission_classes = [MessagePermission]
-    filter_backends = [SearchFilter]
-    search_fields = ['text']
+    # pagination_class = [ChatPagination]
 
     def get_queryset(self):
         return Messages.objects.filter(group_message_id=self.kwargs['pk']).exclude(
@@ -56,3 +76,12 @@ class Chat(generics.ListCreateAPIView):
         return context
 
 
+class SearchMessage(generics.ListAPIView):
+    serializer_class = SearchMessageModelSerializer
+    permission_classes = [MessagePermission]
+    filter_backends = [SearchFilter]
+    search_fields = ['text']
+    # filter_class = MessageFilter
+
+    def get_queryset(self):
+        return Messages.objects.filter(group_message_id=self.kwargs['pk'])

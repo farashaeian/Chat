@@ -41,11 +41,6 @@ class UserGroupsModelSerializer(serializers.ModelSerializer):
 
 
 class ChatModelSerializer(serializers.ModelSerializer):
-    """
-    def __init__(self, *args, **kwargs):
-        super(ChatModelSerializer, self).__init__( *args, **kwargs)
-        self.current_group_id = kwargs['context']['view'].kwargs['pk']
-    """
     user_message = serializers.PrimaryKeyRelatedField(default=serializers.CurrentUserDefault(), queryset=User.objects.all())
 
     class Meta:
@@ -56,9 +51,15 @@ class ChatModelSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
-        # group = Group.objects.get(id=self.current_group_id)
         current_group_id = self.context.get("pk")
         group = Group.objects.get(id=current_group_id)
         attrs['group_message'] = group
         return attrs
+
+
+class SearchMessageModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Messages
+        fields = ['text', 'date', 'user_message']
+
 
