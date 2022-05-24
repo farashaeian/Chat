@@ -41,15 +41,15 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
-    # 'rest_framework_filters',
+    'rest_framework_filters',
 ]
 
-# delete it from above list:  'rest_framework_filters',
-# delete it from below list: 'rest_framework_filters.backends.RestFrameworkFilterBackend'
-
 REST_FRAMEWORK = {
-    # 'DEFAULT_FILTER_BACKENDS': 'rest_framework_filters.backends.RestFrameworkFilterBackend',
-    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
+    'DEFAULT_FILTER_BACKENDS': (
+        # 'rest_framework_filters.backends.RestFrameworkFilterBackend', #it was for upper version
+        'rest_framework_filters.backends.DjangoFilterBackend',
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'limit': 5
 }

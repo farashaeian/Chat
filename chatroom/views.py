@@ -1,3 +1,5 @@
+import django_filters
+
 from .models import Messages
 from .serializers import UserRegisterModelSerializer, GroupRegisterModelSerializer,\
     AddUserModelSerializer, UserGroupsModelSerializer, ChatModelSerializer, \
@@ -7,11 +9,11 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from .permissions import MessagePermission
 from rest_framework.response import Response
-from rest_framework.filters import SearchFilter
+# from rest_framework.filters import SearchFilter
 # from django_filters import FilterSet
-# from rest_framework_filters import filters
-# import rest_framework_filters as filters
-#from rest_framework.pagination import LimitOffsetPagination
+from django_filters import rest_framework as filters
+from rest_framework.pagination import LimitOffsetPagination
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 class UserRegister(generics.CreateAPIView):
@@ -36,25 +38,56 @@ class UserGroups(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
 
+class ChatPagination(LimitOffsetPagination):
+    max_limit = 5
+
+
 # didn't work in Chat and SearchMessage views:
-"""
+
 class MessageFilter(filters.FilterSet):
     class Meta:
         model = Messages
+        # fields = ['text']
         fields = {
             'date': ['lt', 'gt'],
             'text': ['exact'],
         }
-"""
 
-"""
-class ChatPagination(LimitOffsetPagination):
-    max_limit = 5"""
+
+class SearchMessage(generics.ListAPIView):
+    serializer_class = SearchMessageModelSerializer
+    permission_classes = [MessagePermission]
+    # filter_backends = [SearchFilter]
+    # search_fields = ['text']
+    filter_backends = [DjangoFilterBackend]
+    # filterset_fields = ['text', 'date']
+    filterset_class = MessageFilter
+
+    def get_queryset(self):
+        return Messages.objects.filter(group_message_id=self.kwargs['pk'])
+
+
+class FilterMessage(filters.FilterSet):
+    date = django_filters.DateFilter(method=None)
+    before_date = django_filters.DateFilter(field_name='date', lookup_expr='lte')
+    after_date = django_filters.DateFilter(field_name='date', lookup_expr='gte')
+    text = filters.CharFilter()
+    # method='text_queryset'
+
+    def text_queryset(self, queryset, **kwargs):
+        queryset = Messages.objects.filter(group_message_id=kwargs['pk'])
+        return queryset
+
+    class Meta:
+        model = Messages
+        fields = ['date', 'text']
+
 
 
 class Chat(generics.ListCreateAPIView):
     serializer_class = ChatModelSerializer
     permission_classes = [MessagePermission]
+    filterset_class = FilterMessage
     # pagination_class = [ChatPagination]
 
     def get_queryset(self):
@@ -75,13 +108,3 @@ class Chat(generics.ListCreateAPIView):
         context.update({"pk": self.kwargs['pk']})
         return context
 
-
-class SearchMessage(generics.ListAPIView):
-    serializer_class = SearchMessageModelSerializer
-    permission_classes = [MessagePermission]
-    filter_backends = [SearchFilter]
-    search_fields = ['text']
-    # filter_class = MessageFilter
-
-    def get_queryset(self):
-        return Messages.objects.filter(group_message_id=self.kwargs['pk'])
