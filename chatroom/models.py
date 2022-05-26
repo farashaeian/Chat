@@ -1,27 +1,13 @@
 from django.db import models
 from datetime import datetime
-from django.contrib.auth.models import User, Group, AbstractUser
-from django.contrib.auth.base_user import BaseUserManager
-
-"""
-class CustomUserManager(BaseUserManager):
-    def create_user(self, username, password, **kwargs):
-        user = self.model(username=username, is_active=True, **kwargs)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, username, password, **kwargs):
-        user = self.model(username=username, is_staff=True, is_superuser=True, is_active=True, **kwargs)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
+from django.contrib.auth.models import User, Group
 
 
-class CustomUser(User):
-    block = models.ManyToManyField('self')
-    objects = CustomUserManager
-"""
+class BlockedUser(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # member = models.ManyToManyField(User)
+    # member = models.ManyToManyField(self)
+    blocklist_is_activ = models.BooleanField(default=True)
 
 
 class Messages(models.Model):

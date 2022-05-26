@@ -1,4 +1,4 @@
-from .models import *
+from .models import Messages, BlockedUser
 from rest_framework import serializers
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
@@ -57,9 +57,8 @@ class ChatModelSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class SearchMessageModelSerializer(serializers.ModelSerializer):
+class BlockUserModelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Messages
-        fields = ['text', 'date', 'user_message']
-
+        model = User
+        fields = ['member']
 
