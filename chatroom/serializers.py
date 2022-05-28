@@ -1,6 +1,6 @@
-from .models import Messages, BlockedUser
+from .models import Messages, User
 from rest_framework import serializers
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.contrib.auth.hashers import make_password
 
 
@@ -57,8 +57,12 @@ class ChatModelSerializer(serializers.ModelSerializer):
         return attrs
 
 
+# validate(authenticated user == url pk)
 class BlockUserModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['member']
+        fields = ['blockeduser']
 
+    def validate(self, attrs):
+        attrs['id'] = self.context.get("pk")
+        return attrs

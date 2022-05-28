@@ -1,13 +1,13 @@
-from .models import Messages, BlockedUser
+from .models import Messages, User
 from .serializers import UserRegisterModelSerializer, GroupRegisterModelSerializer,\
     AddUserModelSerializer, UserGroupsModelSerializer, ChatModelSerializer, \
     BlockUserModelSerializer
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from .permissions import MessagePermission
-from django_filters import rest_framework as filters
 from rest_framework.pagination import LimitOffsetPagination
+from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 
@@ -15,7 +15,6 @@ from rest_framework.response import Response
 class UserRegister(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegisterModelSerializer
-    permission_classes = [IsAuthenticated]
 
 
 class GroupRegister(generics.ListCreateAPIView):
@@ -34,10 +33,15 @@ class UserGroups(generics.ListAPIView):
     serializer_class = UserGroupsModelSerializer
 
 
-class BlockUser(generics.ListCreateAPIView):
-    queryset = BlockedUser.objects.all()
+class BlockUser(generics.UpdateAPIView):
+    queryset = User.objects.all()
     serializer_class = BlockUserModelSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_context(self):
+        context = super(BlockUser, self).get_serializer_context()
+        context.update({"pk": self.request.user.id})
+        return context
 
 
 class MessageFilter(filters.FilterSet):
@@ -45,7 +49,7 @@ class MessageFilter(filters.FilterSet):
         model = Messages
         fields = {
             'date': ['exact', 'lte', 'gte'],
-            'text': ['exact'],
+            'text': ['exact']
         }
 
 
@@ -57,8 +61,17 @@ class Chat(generics.ListCreateAPIView):
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        return Messages.objects.filter(group_message_id=self.kwargs['pk'])
-        # return Messages.objects.filter(group_message_id=self.kwargs['pk']).exclude(status=self.request.user.id)
+        query_txt = self.request.query_params.get('text')
+        query_date = self.request.query_params.get('date')
+        query_date_gte = self.request.query_params.get('date__gte')
+        query_date_lte = self.request.query_params.get('date__lte')
+
+        if query_txt or query_date or query_date_gte or query_date_lte:
+            return Messages.objects.filter(group_message_id=self.kwargs['pk'])
+        else:
+            return Messages.objects.filter(group_message_id=self.kwargs['pk']).exclude(
+                status=self.request.user.id)  # .exclude(
+                # user_message_id=self.request.user.user_set.id)
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()

@@ -9,3 +9,4 @@ urlpatterns = [
         path('chat/<pk>/', views.Chat.as_view(), name='chat'),
         path('block_user/<pk>/', views.BlockUser.as_view(), name='block_user'),
 ]
+

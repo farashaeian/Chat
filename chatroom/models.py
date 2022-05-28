@@ -1,13 +1,10 @@
 from django.db import models
 from datetime import datetime
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, AbstractUser
 
 
-class BlockedUser(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    # member = models.ManyToManyField(User)
-    # member = models.ManyToManyField(self)
-    blocklist_is_activ = models.BooleanField(default=True)
+class User(AbstractUser):
+    blockeduser = models.ManyToManyField('self', symmetrical=False)  # related_name='blockedmember',
 
 
 class Messages(models.Model):
@@ -19,6 +16,3 @@ class Messages(models.Model):
 
     class Meta:
         ordering = ['date']
-
-
-
