@@ -63,6 +63,7 @@ class BlockUserModelSerializer(serializers.ModelSerializer):
         model = User
         fields = ['blockeduser']
 
+    """
     def validate(self, attrs):
         attrs['id'] = self.context.get("pk")
-        return attrs
+        return attrs"""
