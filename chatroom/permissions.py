@@ -10,6 +10,10 @@ class MessagePermission(permissions.BasePermission):
 
 
 class BlockPermission(permissions.BasePermission):
+    message = 'pk!=request.user'
+
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
+        # request.user.id is int
+        # request.parser_context['kwargs']['pk'] is str
+        if request.user.id == int(request.parser_context['kwargs']['pk']):
             return True

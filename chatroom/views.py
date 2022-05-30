@@ -37,8 +37,7 @@ class UserGroups(generics.ListAPIView):
 class BlockUser(generics.UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = BlockUserModelSerializer
-    permission_classes = [IsAuthenticated]
-    # permission_classes = [BlockPermission]
+    permission_classes = [BlockPermission]
 
     def get_serializer_context(self):
         context = super(BlockUser, self).get_serializer_context()
@@ -55,35 +54,47 @@ class MessageFilter(filters.FilterSet):
         }
 
 
-""" from rest_framework_filters:
-class MessageFilter(filters.FilterSet):
-    class Meta:
-        model = Messages
-        fields = {'text': ['exact']}"""
-
-
 class Chat(generics.ListCreateAPIView):
     serializer_class = ChatModelSerializer
     permission_classes = [MessagePermission]
-    # filter_backends = [DjangoFilterBackend]
     filterset_class = MessageFilter
-    # filterset_fields = ['text']
     pagination_class = LimitOffsetPagination
-    # for rest_framework_filters:
-    # filter_class = MessageFilter
 
     def get_queryset(self):
-        query_txt = self.request.query_params.get('text')
+        q = self.request.user.blockeduser.all()
+        qids = q.values_list('id', flat=True)
+        queryset = Messages.objects.filter(group_message_id=self.kwargs['pk']).exclude(
+            status=self.request.user.id).exclude(
+            user_message_id__in=qids)
+
+        query_text = self.request.query_params.get('text')
         query_date = self.request.query_params.get('date')
         query_date_gte = self.request.query_params.get('date__gte')
         query_date_lte = self.request.query_params.get('date__lte')
 
-        if query_txt or query_date or query_date_gte or query_date_lte:
-            return Messages.objects.filter(group_message_id=self.kwargs['pk'])
-        else:
-            return Messages.objects.filter(group_message_id=self.kwargs['pk']).exclude(
-                status=self.request.user.id).exclude(
-                user_message_id=self.request.user.blockeduser.id)
+        if query_text:
+            return Messages.objects.filter(group_message_id=self.kwargs['pk']).filter(
+                text=query_text
+            )
+        elif query_date:
+            return Messages.objects.filter(group_message_id=self.kwargs['pk']).filter(
+                date=query_date
+            )
+        elif query_date_gte:
+            return Messages.objects.filter(group_message_id=self.kwargs['pk']).filter(
+                date__gte=query_date_gte
+            )
+        elif query_date_lte:
+            return Messages.objects.filter(group_message_id=self.kwargs['pk']).filter(
+                date__lte=query_date_lte
+            )
+        # we don't need it. you can check it in postman :
+        """
+        elif query_date_lte and query_date_gte:
+            return Messages.objects.filter(group_message_id=self.kwargs['pk']).filter(
+                date__lte=query_date_lte).filter(date__gte=query_date_gte)"""
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -98,3 +109,38 @@ class Chat(generics.ListCreateAPIView):
         context = super(Chat, self).get_serializer_context()
         context.update({"pk": self.kwargs['pk']})
         return context
+
+
+# def get_queryset() in chat view:
+"""
+if condition for filterclass queryset:
+        query_txt = self.request.query_params.get('text')
+        query_date = self.request.query_params.get('date')
+        query_date_gte = self.request.query_params.get('date__gte')
+        query_date_lte = self.request.query_params.get('date__lte')
+
+        if query_txt or query_date or query_date_gte or query_date_lte:
+            return ...proper queryset...
+"""
+"""
+current group messages:
+
+Messages.objects.filter(group_message_id=self.kwargs['pk'])
+"""
+"""
+current group messages.unread messages for current user:
+
+Messages.objects.filter(group_message_id=self.kwargs['pk']).exclude(
+status=self.request.user.id)
+"""
+"""
+current group messages.unread messages for current user.excepted
+ the current user's blocked users messages:
+ 
+ q = self.request.user.blockeduser.all()
+ qids = q.values_list('id', flat=True)
+            
+Messages.objects.filter(group_message_id=self.kwargs['pk']).exclude(
+                status=self.request.user.id).exclude(
+                user_message_id__in=qids)
+"""
