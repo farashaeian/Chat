@@ -57,7 +57,7 @@ class MessageFilter(filters.FilterSet):
 class Chat(generics.ListCreateAPIView):
     serializer_class = ChatModelSerializer
     permission_classes = [MessagePermission]
-    filterset_class = MessageFilter
+    # filterset_class = MessageFilter
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
