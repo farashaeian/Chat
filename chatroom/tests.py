@@ -2,10 +2,6 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from .models import User
-from .views import GroupRegister
-from rest_framework.test import APIRequestFactory
-from django.contrib.auth.hashers import make_password
-from rest_framework.test import force_authenticate
 
 
 # example:
@@ -15,32 +11,37 @@ class UserTests(APITestCase):
         Ensure we can create a new user object.
         """
         url = reverse('user_register')
-        data = {'name': 'sina'}
+        data = {'name': 'sina', 'password': '1234'}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(User.objects.count(), 1)
         self.assertEqual(User.objects.get().name, 'sina')
 
+    def test_update_user(self):
+        """
+        Ensure we can update an exist user object.
+        """
+        url = reverse('add_user', kwargs={'pk': 4})  #  , args=[2] instead of kwargs is ok.
+        data = {'groups': [1]}
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(User.objects.get().name, 'sina')
+        self.assertEqual(User.objects.get().groups, '1')
 
-class UserTestPost(APIRequestFactory):
-    factory = APIRequestFactory()
-    p = make_password(1234)
-    request = factory.post('/user_register/', {'username': 'reza', 'password': p},
-                           format='json')
+    def test_list_usergroups(self):
+        """
+                Ensure we can list user's groups.
+                """
+        url = reverse('user_groups')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class GroupTestPut(APIRequestFactory):
-    factory = APIRequestFactory()
-    request = factory.put('/add_user/4/', {'groups': [1,2]})
+class GroupTest(APITestCase):
+    def setUp(self):
+        self.client.login(username='ali', password='1234')
 
-
-class GroupTestAuth(APIRequestFactory):
-    factory = APIRequestFactory()
-    user = User.objects.get(username='olivia')
-    view = GroupRegister.as_view()
-
-    # Make an authenticated request to the view...
-    request = factory.get('/group_register/')
-    force_authenticate(request, user=user)
-    response = view(request)
-
+    def test_list_group(self):
+        url = reverse('group_register')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
