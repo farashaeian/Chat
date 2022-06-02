@@ -57,13 +57,7 @@ class ChatModelSerializer(serializers.ModelSerializer):
         return attrs
 
 
-# validate(authenticated user == url pk)
 class BlockUserModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['blockeduser']
-
-    """
-    def validate(self, attrs):
-        attrs['id'] = self.context.get("pk")
-        return attrs"""
