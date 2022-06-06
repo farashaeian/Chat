@@ -88,12 +88,6 @@ class Chat(generics.ListCreateAPIView):
             return Messages.objects.filter(group_message_id=self.kwargs['pk']).filter(
                 date__lte=query_date_lte
             )
-        # we don't need it. you can check it in postman :
-        """
-        elif query_date_lte and query_date_gte:
-            return Messages.objects.filter(group_message_id=self.kwargs['pk']).filter(
-                date__lte=query_date_lte).filter(date__gte=query_date_gte)"""
-
         return queryset
 
     def list(self, request, *args, **kwargs):
