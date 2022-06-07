@@ -10,8 +10,6 @@ class UserTests(APITestCase):
     """
     def setUp(self):
         # creating user in setUp makes error for create_user test
-        # client = APIClient()
-        # client.login(username='ali', password='1234')
         user = User.objects.create_user('ali', '1234')
         # self.assertTrue(self.client.login(username='ali', password='1234'))
         self.client.force_authenticate(user)"""
@@ -73,6 +71,7 @@ class UserTests(APITestCase):
         qid = q.values_list('id', flat=True)
         self.assertEqual(qid, '1')"""
         self.assertEqual(response.data, {'blockeduser': [1]})
+        self.assertEqual(User.objects.get().blockeduser_id, 1)
 
 
 class GroupTests(APITestCase):
@@ -80,9 +79,7 @@ class GroupTests(APITestCase):
     def setUp(self):
         # user = User.objects.get(username='ali', password='1234')
         # self.client.force_login(user=user)
-        # self.client.login(user=user)
-        # client = APIClient()
-        # client.login(username='ali', password='1234')"""
+        """
 
     def test_create_group(self):
         """
@@ -109,13 +106,27 @@ class GroupTests(APITestCase):
 
 class ChatTests(APITestCase):
     def test_create_message(self):
-        user = User.objects.create_user(username='ali', email='a@a', password='1234')
-        user.groups.set([1])
+        group1 = Group.objects.create(name='first_test_group')
+        group2 = Group.objects.create(name='second_test_group')
+        user1 = User.objects.create_user(username='ali', email='a@a', password='1234')
+        user1.groups.set([1, 2])
+        user2 = User.objects.create_user(username='sara', email='s@s', password='1234')
+        user2.groups.set([1])
         self.assertTrue(self.client.login(username='ali', password='1234'))
-        group = Group.objects.create(name='test_group')
-        url = reverse('chat', kwargs={'pk': 1})
+        url = reverse('chat', kwargs={'pk': 2})
         data = {'text': 'hi'}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, {'text': 'hi'})
+        self.assertEqual(Messages.objects.get().text, 'hi')
+        self.assertEqual(Messages.objects.get().group_message_id, 2)
+        self.assertEqual(Messages.objects.get().user_message_id, 1)
+        # what are these???
+        # self.assertEqual(response.data, {'text': 'hi'})
         # self.assertEqual(json.loads(response.content), {'text': 'hi'})
+        # {'text': 'hi', 'date': '2022-06-07T13:50:15.418753Z', 'user_message': 1}
+
+    def test_list_message(self):
+        messages = Messages.objects.filter(group_message=1)
+        # why User.objects.get(id=4) can't work???
+        user = User.objects.filter(id=4)
+        self.assertTrue(self.client.login(username='ali', password='1234'))

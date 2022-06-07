@@ -55,9 +55,10 @@ class MessageFilter(filters.FilterSet):
 
 
 class Chat(generics.ListCreateAPIView):
+    model = Messages
     serializer_class = ChatModelSerializer
     permission_classes = [MessagePermission]
-    # filterset_class = MessageFilter
+    filterset_class = MessageFilter
     pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
@@ -67,31 +68,15 @@ class Chat(generics.ListCreateAPIView):
             status=self.request.user.id).exclude(
             user_message_id__in=qids)
 
-        query_text = self.request.query_params.get('text')
-        query_date = self.request.query_params.get('date')
-        query_date_gte = self.request.query_params.get('date__gte')
-        query_date_lte = self.request.query_params.get('date__lte')
+        if self.request.query_params:
+            queryset = Messages.objects.filter(group_message_id=self.kwargs['pk'])
 
-        if query_text:
-            return Messages.objects.filter(group_message_id=self.kwargs['pk']).filter(
-                text=query_text
-            )
-        elif query_date:
-            return Messages.objects.filter(group_message_id=self.kwargs['pk']).filter(
-                date=query_date
-            )
-        elif query_date_gte:
-            return Messages.objects.filter(group_message_id=self.kwargs['pk']).filter(
-                date__gte=query_date_gte
-            )
-        elif query_date_lte:
-            return Messages.objects.filter(group_message_id=self.kwargs['pk']).filter(
-                date__lte=query_date_lte
-            )
         return queryset
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        # to apply filters on queryset,
+        # have to use filter_queryset() in overridden list method
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = ChatModelSerializer(queryset, many=True)
         # associate retrieved messages to the current user
         current_user = self.request.user
