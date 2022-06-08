@@ -2,17 +2,11 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from .models import User, Messages
-from rest_framework.test import APIClient
 from django.contrib.auth.models import Group
+from collections import OrderedDict
 
 
 class UserTests(APITestCase):
-    """
-    def setUp(self):
-        # creating user in setUp makes error for create_user test
-        user = User.objects.create_user('ali', '1234')
-        # self.assertTrue(self.client.login(username='ali', password='1234'))
-        self.client.force_authenticate(user)"""
 
     def test_create_user(self):
         """
@@ -40,16 +34,29 @@ class UserTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(User.objects.get().username, 'ali')
         # how to check user's groups?
-        # self.assertEqual(User.objects.get().groups, '1')
+        # 1
+        q = user.groups.all()
+        qid = q.values_list('id', flat=True)
+        self.assertEqual(list(qid), [1])
+        # 2
         self.assertEqual(response.data, {'groups': [1]})
 
     def test_list_usergroups(self):
         """
         Ensure we can list user's groups.
         """
+        group1 = Group.objects.create(name='first_test_group')
+        group2 = Group.objects.create(name='second_test_group')
+
+        user1 = User.objects.create_user(username='ali', email='a@a', password='1234')
+        user1.groups.set([1])
+        user2 = User.objects.create_user(username='sara', email='s@s', password='1234')
+        user2.groups.set([1, 2])
+
         url = reverse('user_groups')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [OrderedDict([('username', 'ali'), ('groups', [1])]), OrderedDict([('username', 'sara'), ('groups', [1,2])])])
 
     def test_update_block_user(self):
         """
@@ -63,23 +70,16 @@ class UserTests(APITestCase):
         response = self.client.put(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # how check permission? (below line is wrong)
-        """
-        # self.assertEqual(User.objects.get().id, '2')"""
-        # check blockeduser.id
-        """
-        q = User.blockeduser.all()
+        # check blockeduser.id (which one?)
+        # 1
+        q = user.blockeduser.all()
         qid = q.values_list('id', flat=True)
-        self.assertEqual(qid, '1')"""
-        self.assertEqual(response.data, {'blockeduser': [1]})
-        self.assertEqual(User.objects.get().blockeduser_id, 1)
+        self.assertEqual(list(qid), [1])
+        # 2
+        self.assertEqual(response.data, {"blockeduser": [1]})
 
 
 class GroupTests(APITestCase):
-    """
-    def setUp(self):
-        # user = User.objects.get(username='ali', password='1234')
-        # self.client.force_login(user=user)
-        """
 
     def test_create_group(self):
         """
@@ -96,12 +96,15 @@ class GroupTests(APITestCase):
         self.assertEqual(Group.objects.get().name, 'first_group')
 
     def test_list_group(self):
+        group1 = Group.objects.create(name='first_test_group')
+        group2 = Group.objects.create(name='second_test_group')
         user = User.objects.create_user(username='ali', email='a@a', password='1234')
         # self.assertTrue(self.client.login(username='ali', password='1234'))
         self.client.force_authenticate(user)
         url = reverse('group_register')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [OrderedDict([('name', 'first_test_group')]), OrderedDict([('name', 'second_test_group')])])
 
 
 class ChatTests(APITestCase):
@@ -126,7 +129,30 @@ class ChatTests(APITestCase):
         # {'text': 'hi', 'date': '2022-06-07T13:50:15.418753Z', 'user_message': 1}
 
     def test_list_message(self):
-        messages = Messages.objects.filter(group_message=1)
-        # why User.objects.get(id=4) can't work???
-        user = User.objects.filter(id=4)
+        group1 = Group.objects.create(name='first_test_group')
+        group2 = Group.objects.create(name='second_test_group')
+
+        user1 = User.objects.create_user(username='ali', email='a@a', password='1234')
+        user1.groups.set([1])
+        user2 = User.objects.create_user(username='sara', email='s@s', password='1234')
+        user2.groups.set([1, 2])
+
         self.assertTrue(self.client.login(username='ali', password='1234'))
+
+        message1 = Messages.objects.create(text='hi', group_message_id='1', user_message_id='1')
+        message2 = Messages.objects.create(text='hello', group_message_id='2', user_message_id='1')
+        message3 = Messages.objects.create(text='me', group_message_id='2', user_message_id='2')
+
+        url = reverse('chat', kwargs={'pk': 1})
+        response = self.client.get(url)
+        response.render()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # self.assertEqual(response.content, b'[{"text":"hi","date":"2022-06-08T11:42:55.869792Z","user_message":1}]')
+        self.assertEqual(response.data, [OrderedDict([('text', 'hi'), ('date', '2022-06-08T14:47:27.242568Z'), ('user_message', 1)])])
+        # why does show read message???
+        message1.status.set([1])
+        self.assertEqual(len(response.data), 0)
+
+
+
