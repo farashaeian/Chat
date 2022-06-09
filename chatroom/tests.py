@@ -8,6 +8,24 @@ from collections import OrderedDict
 
 class UserTests(APITestCase):
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.group1 = Group.objects.create(name='first_test_group')
+        cls.group2 = Group.objects.create(name='second_test_group')
+
+        cls.user1 = User.objects.create_user(
+            username='ali', email='a@a', password='1234')
+        # unresolved attribute source for user1
+        cls.user1.groups.add(cls.group1)
+        cls.user1.blockeduser.set([2])
+        cls.user2 = User.objects.create_user(
+            username='sara', email='s@s', password='1234')
+        cls.user2.groups.set([1, 2])
+
+        cls.message1 = Messages.objects.create(text='hi', group_message_id='1', user_message_id='1')
+        cls.message2 = Messages.objects.create(text='hello', group_message_id='1', user_message_id='1')
+        cls.message3 = Messages.objects.create(text='me', group_message_id='2', user_message_id='2')
+
     def test_create_user(self):
         """
         Ensure we can create a new user object.
@@ -17,8 +35,8 @@ class UserTests(APITestCase):
         data = {'username': 'sina', 'password': '1234'}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(User.objects.count(), 1)
-        self.assertEqual(User.objects.get().username, 'sina')
+        self.assertEqual(User.objects.count(), 3)
+        self.assertEqual(User.objects.all().username, ['ali', 'sara', 'sina'])
 
     def test_update_add_user(self):
         """
@@ -123,10 +141,7 @@ class ChatTests(APITestCase):
         self.assertEqual(Messages.objects.get().text, 'hi')
         self.assertEqual(Messages.objects.get().group_message_id, 2)
         self.assertEqual(Messages.objects.get().user_message_id, 1)
-        # what are these???
-        # self.assertEqual(response.data, {'text': 'hi'})
-        # self.assertEqual(json.loads(response.content), {'text': 'hi'})
-        # {'text': 'hi', 'date': '2022-06-07T13:50:15.418753Z', 'user_message': 1}
+        self.assertEqual(Messages.objects.count(), 1)
 
     def test_list_message(self):
         group1 = Group.objects.create(name='first_test_group')
@@ -134,16 +149,17 @@ class ChatTests(APITestCase):
 
         user1 = User.objects.create_user(username='ali', email='a@a', password='1234')
         user1.groups.set([1])
+        user1.blockeduser.set([2])
         user2 = User.objects.create_user(username='sara', email='s@s', password='1234')
         user2.groups.set([1, 2])
 
         self.assertTrue(self.client.login(username='ali', password='1234'))
 
         message1 = Messages.objects.create(text='hi', group_message_id='1', user_message_id='1')
-        message2 = Messages.objects.create(text='hello', group_message_id='2', user_message_id='1')
+        message2 = Messages.objects.create(text='hello', group_message_id='1', user_message_id='1')
         message3 = Messages.objects.create(text='me', group_message_id='2', user_message_id='2')
 
-        url = reverse('chat', kwargs={'pk': 1})
+        url = reverse('chat', {'text': 'hi'}, kwargs={'pk': 1})
         response = self.client.get(url)
         response.render()
 
