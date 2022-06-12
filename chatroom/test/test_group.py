@@ -16,11 +16,11 @@ class GroupTests(APITestCase):
         cls.user1 = User.objects.create_user(
             username='ali', email='a@a', password='1234')
         # Unresolved attribute reference 'user1' for class 'UserTests'
-        cls.user1.groups.set([1])
-        cls.user1.blockeduser.set([2])
+        cls.user1.groups.set([cls.group1.id])
+        cls.user1.blockeduser.set([cls.group2.id])
         cls.user2 = User.objects.create_user(
             username='sara', email='s@s', password='1234')
-        cls.user2.groups.set([1, 2])
+        cls.user2.groups.set([cls.group1.id, cls.group2.id])
 
     def test_create_group(self):
         """

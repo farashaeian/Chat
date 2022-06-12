@@ -16,15 +16,18 @@ class UserTests(APITestCase):
         cls.user1 = User.objects.create_user(
             username='ali', email='a@a', password='1234')
         # Unresolved attribute reference 'user1' for class 'UserTests'
-        cls.user1.groups.set([1])
-        cls.user1.blockeduser.set([2])
+        cls.user1.groups.set([cls.group1.id])
+        cls.user1.blockeduser.set([cls.group2.id])
         cls.user2 = User.objects.create_user(
             username='sara', email='s@s', password='1234')
-        cls.user2.groups.set([1, 2])
+        cls.user2.groups.set([cls.group1.id, cls.group2.id])
 
-        cls.message1 = Messages.objects.create(text='hi', group_message_id='1', user_message_id='1')
-        cls.message2 = Messages.objects.create(text='hello', group_message_id='1', user_message_id='2')
-        cls.message3 = Messages.objects.create(text='me', group_message_id='2', user_message_id='2')
+        cls.message1 = Messages.objects.create(
+            text='hi', group_message_id=str(cls.group1.id), user_message_id=str(cls.user1.id))
+        cls.message2 = Messages.objects.create(
+            text='hello', group_message_id=str(cls.group1.id), user_message_id=str(cls.user2.id))
+        cls.message3 = Messages.objects.create(
+            text='me', group_message_id=str(cls.group2.id), user_message_id=str(cls.user2.id))
 
     def test_create_user(self):
         """
