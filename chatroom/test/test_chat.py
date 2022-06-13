@@ -8,8 +8,10 @@ from datetime import datetime
 from freezegun import freeze_time
 
 
+@freeze_time("2022-06-12")
 class ChatTests(APITestCase):
     @classmethod
+    @freeze_time("2022-06-12")
     def setUpTestData(cls):
         cls.group1 = Group.objects.create(name='first_test_group')
         cls.group2 = Group.objects.create(name='second_test_group')
@@ -41,29 +43,32 @@ class ChatTests(APITestCase):
         self.assertEqual(Messages.objects.get(id=4).user_message_id, 1)
         self.assertEqual(Messages.objects.count(), 4)
 
-    @freeze_time("2022-06-12T14:59:35.148689Z")
+    @freeze_time("2022-06-12")
     def test_list_message(self):
+        # datetime.now doesn't work in freezing
+        a = datetime.now()
+        b = datetime(2022, 6, 12)
+        self.assertEqual(datetime.now(), datetime(2022, 6, 12))
+
         self.assertTrue(self.client.login(username='ali', password='1234'))
 
-        url = reverse('chat', kwargs={'pk': 1})  # kwargs={'pk': 1}{'text': 'hi'}, for filter test
+        url = reverse('chat', kwargs={'pk': 1})
         response = self.client.get(url)
         response.render()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # message date is changed!!! #  2022-06-08T14:47:27.242568Z
-        self.assertEqual(
-            response.data, [OrderedDict([('text', 'hi'), ('date', '2022-06-12T14:59:35.148689Z'), ('user_message', 1)])])
         self.assertEqual(len(response.data), 1)
+        # message date is changed!!!
+        self.assertEqual(
+            response.data, [OrderedDict([('text', 'hi'), ('date', '2022-06-12'), ('user_message', 1)])])
 
-        # why does show read message???
+        # show read message???
         self.message1.status.set([self.user1.id])
-        # self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data), 0)
 
         q = self.message1.status.all()
         qid = q.values_list('id', flat=True)
         self.assertEqual(list(qid), [self.message1.id])
-        # self.assertEqual(self.message1.status.get(
-            # id=self.message1.id), self.message1.id)
 
     def test_list_filter_message(self):
         self.assertTrue(self.client.login(username='ali', password='1234'))
