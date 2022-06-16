@@ -54,22 +54,20 @@ class ChatTests(APITestCase):
         self.assertTrue(self.client.login(username='ali', password='1234'))
 
         url = reverse('chat', kwargs={'pk': 1})
-        data = {'text': 'bye'}
+        data = {'text': 'bye', 'date': datetime.now()}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         get_obj = Messages.objects.get(id=5)
-        self.assertEqual(get_obj.date, datetime.now())
+        self.assertEqual(get_obj.date.strftime("%Y-%m-%d %H:%M:%S"), datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         self.assertEqual(get_obj.text, 'bye')
         self.assertEqual(get_obj.group_message_id, self.user1.id)
         self.assertEqual(get_obj.user_message_id, self.group1.id)
-        # self.assertEqual(get_obj.date, datetime.now())
         self.assertEqual(Messages.objects.count(), 5)
-        # .strftime("%Y-%m-%d %H:%M:%S")
 
-    @freeze_time("2022-06-12")
+    # @freeze_time("2022-06-12")
     def test_list_unread_unblocked_message(self):
-        self.assertEqual(datetime.now(), datetime(2022, 6, 12))
+        # self.assertEqual(datetime.now(), datetime(2022, 6, 12))
 
         self.assertTrue(self.client.login(username='ali', password='1234'))
 
@@ -202,7 +200,7 @@ class ChatTests(APITestCase):
         response.render()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 3)
         self.assertEqual(response.data[0]['text'], 'hi')
         self.assertEqual(response.data[1]['text'], 'hey')
         self.assertEqual(response.data[2]['text'], 'hello')
