@@ -20,7 +20,10 @@ class UserTests(APITestCase):
             username='sara', email='s@s', password='1234')
         cls.user2.groups.set([cls.group1.id, cls.group2.id])
 
-    def test_create_user(self):
+    def setUp(self):
+        self.client.force_login(self.user1)
+
+    def test_create_user_successfully(self):
         """
         Ensure we can create a new user object.
         """
@@ -35,11 +38,11 @@ class UserTests(APITestCase):
         self.assertEqual(response.data['password'], user.password)
         self.assertEqual(response.data['groups'], list(user.groups.all()))
 
-    def test_update_add_user(self):
+    def test_update_add_user_successfully(self):
         """
         Ensure we can add a user to the groups.
         """
-        self.assertTrue(self.client.login(username='ali', password='1234'))
+        # self.assertTrue(self.client.login(username='ali', password='1234'))
         # self.client.force_authenticate(user)
 
         url = reverse('add_user', kwargs={'pk': 1})  # args=[2] instead of kwargs is ok.
@@ -50,7 +53,7 @@ class UserTests(APITestCase):
         self.assertEqual(response.data['groups'],
                          list(self.user1.groups.all().values_list('id', flat=True)))
 
-    def test_list_usergroups(self):
+    def test_list_usergroups_successfully(self):
         """
         Ensure we can list users groups.
         """
@@ -64,11 +67,10 @@ class UserTests(APITestCase):
         self.assertEqual(response.data[1]['groups'],
                          list(self.user2.groups.all().values_list('id', flat=True)))
 
-    def test_update_block_user(self):
+    def test_update_block_user_successfully(self):
         """
         Ensure we can update blocked users for the current user object.
         """
-        self.assertTrue(self.client.login(username='ali', password='1234'))
 
         url = reverse('block_user', kwargs={'pk': 1})
         data = {'blockeduser': [2]}
