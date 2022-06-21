@@ -3,39 +3,35 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from chatroom.models import User
 from django.contrib.auth.models import Group
-from collections import OrderedDict
+from model_mommy import mommy
 
 
 class GroupTests(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user1 = User.objects.create_user(
-            username='ali', email='a@a', password='1234')
+        cls.user = mommy.make(User)
 
     def setUp(self):
-        self.client.force_login(self.user1)
+        self.client.force_login(self.user)
 
     def test_create_group_successfully(self):
-        """
-        Ensure we can create a new group object.
-        """
-
         url = reverse('group_register')
         data = {'name': 'test_group'}
         response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Group.objects.count(), 1)
+        self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data['name'], 'test_group')
 
     def test_list_group_successfully(self):
-        # self.client.force_authenticate(self.user1)
-        self.group1 = Group.objects.create(name='first_test_group')
-        self.group2 = Group.objects.create(name='second_test_group')
+        group = mommy.make(Group, 3)
         url = reverse('group_register')
         response = self.client.get(url)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]['name'], self.group1.name)
-        self.assertEqual(response.data[1]['name'], self.group2.name)
+        self.assertEqual(len(response.data), 3)
+        self.assertEqual(response.data[0]['name'], group[0].name)
+        self.assertEqual(response.data[1]['name'], group[1].name)
+        self.assertEqual(response.data[2]['name'], group[2].name)
 
