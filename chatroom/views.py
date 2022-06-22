@@ -11,7 +11,7 @@ from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 # import rest_framework_filters as filters
-import re
+import django_filters
 
 
 class UserRegister(generics.CreateAPIView):
@@ -47,6 +47,8 @@ class BlockUser(generics.UpdateAPIView):
 
 
 class MessageFilter(filters.FilterSet):
+    # dategte = django_filters.DateTimeFilter(field_name='date', lookup_expr='gte')
+
     class Meta:
         model = Messages
         fields = {

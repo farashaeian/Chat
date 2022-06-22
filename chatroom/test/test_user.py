@@ -38,6 +38,20 @@ class UserTests(APITestCase):
         self.assertEqual(response.data['password'], user.password)
         self.assertEqual(response.data['groups'], list(user.groups.all()))
 
+    def test_list_usergroups_successfully(self):
+        """
+        Ensure we can list users groups.
+        """
+        url = reverse('user_groups')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['username'], self.user1.username)
+        self.assertEqual(response.data[0]['groups'],
+                         list(self.user1.groups.all().values_list('id', flat=True)))
+        self.assertEqual(response.data[1]['username'], self.user2.username)
+        self.assertEqual(response.data[1]['groups'],
+                         list(self.user2.groups.all().values_list('id', flat=True)))
+
     def test_update_add_user_successfully(self):
         """
         Ensure we can add a user to the groups.
@@ -53,19 +67,6 @@ class UserTests(APITestCase):
         self.assertEqual(response.data['groups'],
                          list(self.user1.groups.all().values_list('id', flat=True)))
 
-    def test_list_usergroups_successfully(self):
-        """
-        Ensure we can list users groups.
-        """
-        url = reverse('user_groups')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]['username'], self.user1.username)
-        self.assertEqual(response.data[0]['groups'],
-                         list(self.user1.groups.all().values_list('id', flat=True)))
-        self.assertEqual(response.data[1]['username'], self.user2.username)
-        self.assertEqual(response.data[1]['groups'],
-                         list(self.user2.groups.all().values_list('id', flat=True)))
 
     def test_update_block_user_successfully(self):
         """
