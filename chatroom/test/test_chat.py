@@ -72,7 +72,8 @@ class ChatTests(APITestCase):
         self.assertEqual(response.data['text'], 'bye')
         self.assertEqual(response.data['user_message'], self.user1.id)
         # how check group_message_id with response.data ?
-        self.assertEqual(Messages.objects.get(text='bye').group_message_id, self.group1.id)
+        self.assertEqual(
+            Messages.objects.get(text='bye').group_message_id, self.group1.id)
         # how check creation of a single obj ?
         self.assertEqual(Messages.objects.count(), 5)
 
@@ -87,11 +88,13 @@ class ChatTests(APITestCase):
         self.assertEqual(len(response.data), 2)
 
         self.assertEqual(response.data[0]['text'], self.message1.text)
-        self.assertEqual(response.data[0]['user_message'], int(self.message1.user_message_id))
+        self.assertEqual(response.data[0]['user_message'],
+                         int(self.message1.user_message_id))
         self.assertEqual(response.data[0]['date'], self.message1.date)
 
         self.assertEqual(response.data[1]['text'], self.message4.text)
-        self.assertEqual(response.data[1]['user_message'], int(self.message4.user_message_id))
+        self.assertEqual(response.data[1]['user_message'],
+                         int(self.message4.user_message_id))
         self.assertEqual(response.data[1]['date'], self.message4.date)
         # check  messages order
         self.assertLessEqual(response.data[0]['date'], response.data[1]['date'])
@@ -110,7 +113,7 @@ class ChatTests(APITestCase):
         self.assertEqual(response.data[0]['text'], self.message4.text)
 
         message1_read_user = self.message1.status.all().values_list('id', flat=True)
-        self.assertEqual(list(message1_read_user), [self.message1.id])
+        self.assertEqual(list(message1_read_user), [self.user1.id])
 
     def test_list_filter_message_text_right_value(self):
         url = reverse('chat', kwargs={'pk': 1}) + '?text=hello'
