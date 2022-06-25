@@ -107,6 +107,7 @@ class ChatOther1Tests(APITestCase):
         message1_read_user = self.message3.status.all().values_list('id', flat=True)
         self.assertEqual(list(message1_read_user), [self.user[0].id])
 
+
 class ChatOther2Tests(APITestCase):
     def setUp(self):
         self.group = mommy.make(Group, 2)

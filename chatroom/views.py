@@ -47,12 +47,13 @@ class BlockUser(generics.UpdateAPIView):
 
 
 class MessageFilter(filters.FilterSet):
-    # dategte = django_filters.DateTimeFilter(field_name='date', lookup_expr='gte')
+    dategte = filters.DateTimeFilter(field_name='date', lookup_expr='gte')
+    # note: we shouldn't put dateage in fields dictionary.
 
     class Meta:
         model = Messages
         fields = {
-            'date': ['lte', 'gte', 'exact'],
+            'date': ['lte', 'exact'],
             'text': ['exact'],
         }
 
