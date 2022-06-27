@@ -121,6 +121,7 @@ class ChatOther2Tests(APITestCase):
         self.user[2].groups.set([self.group[0].id])
 
         self.message = mommy.make(Messages, 4)
+        # , group_message=self.group, user_message=self.user
 
         self.message[0].group_message_id = self.group[0].id
         self.message[0].user_message_id = self.user[0].id
@@ -165,5 +166,3 @@ class ChatOther2Tests(APITestCase):
 
         message1_read_user = self.message[3].status.all().values_list('id', flat=True)
         self.assertEqual(list(message1_read_user), [self.user[0].id])
-
-

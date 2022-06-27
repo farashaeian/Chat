@@ -6,6 +6,9 @@ from django.contrib.auth.models import Group, AbstractUser
 class User(AbstractUser):
     blockeduser = models.ManyToManyField('self', symmetrical=False)  # related_name='blockedmember',
 
+    class Meta:
+        ordering = ['id']
+
 
 class Messages(models.Model):
     text = models.TextField()

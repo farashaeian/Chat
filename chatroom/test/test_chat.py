@@ -146,7 +146,7 @@ class ChatTests(APITestCase):
         self.assertEqual(len(response.data), 0)
 
     def test_list_filter_message_date_gte_available_value(self):
-        url = reverse('chat', kwargs={'pk': 1}) + '?date__gte=2022-06-13 00:00:00'
+        url = reverse('chat', kwargs={'pk': 1}) + '?dategte=2022-06-13 00:00:00'
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -154,7 +154,7 @@ class ChatTests(APITestCase):
         self.assertEqual(response.data[0]['text'], 'hello')
 
     def test_list_filter_message_date_gte_unavailable_value(self):
-        url = reverse('chat', kwargs={'pk': 1}) + '?date__gte=2022-06-18 00:00:00'
+        url = reverse('chat', kwargs={'pk': 1}) + '?dategte=2022-06-18 00:00:00'
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
