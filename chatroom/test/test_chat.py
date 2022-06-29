@@ -123,11 +123,11 @@ class ChatTests(APITestCase):
         self.assertEqual(response.data[0]['text'], 'hello')
 
     def test_list_filter_message_text_wrong_value(self):
-        url1 = reverse('chat', kwargs={'pk': 1}) + '?text=ss'
-        response1 = self.client.get(url1)
+        url = reverse('chat', kwargs={'pk': 1}) + '?text=ss'
+        response = self.client.get(url)
 
-        self.assertEqual(response1.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response1.data), 0)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
 
     def test_list_filter_message_date_exact_available_value(self):
         # b'[{"text":"hi","date":"2022-06-12T00:00:00Z","user_message":1}]'
