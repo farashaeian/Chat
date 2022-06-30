@@ -4,7 +4,6 @@ from rest_framework.test import APITestCase
 from chatroom.models import User, Messages
 from django.contrib.auth.models import Group
 from datetime import datetime
-from freezegun import freeze_time
 from model_mommy import mommy
 
 
@@ -42,7 +41,7 @@ class ChatCreateTests(APITestCase):
         self.assertEqual(message_date[0], current_date)
 
 
-class ChatOtherTests(APITestCase):
+class ChatListTests(APITestCase):
     def setUp(self):
         self.group = mommy.make(Group, 2)
         self.user = mommy.make(User, 3)
@@ -70,24 +69,18 @@ class ChatOtherTests(APITestCase):
             group_message_id=self.group[0].id,
             user_message_id=self.user[1].id
         )
-        # self.message1.group_message_id = self.group[0].id
-        # self.message1.user_message_id = self.user[1].id
 
         self.message2 = mommy.make(
             Messages,
             group_message_id=self.group[1].id,
             user_message_id=self.user[1].id
         )
-        # self.message2.group_message_id = self.group[1].id
-        # self.message2.user_message_id = self.user[1].id
 
         self.message3 = mommy.make(
             Messages,
             group_message_id=self.group[0].id,
             user_message_id=self.user[2].id
         )
-        # self.message3.group_message_id = self.group[0].id
-        # self.message3.user_message_id = self.user[2].id
 
     def test_list_unread_unblocked_message_successfully(self):
         url = reverse('chat', kwargs={'pk': self.group[0].id})
@@ -136,6 +129,41 @@ class ChatOtherTests(APITestCase):
         message1_read_user = self.message3.status.all().values_list('id', flat=True)
         self.assertEqual(list(message1_read_user), [self.user[0].id])
 
+
+class ChatFilterTests(APITestCase):
+    def setUp(self):
+        self.group = mommy.make(Group, 2)
+        self.user = mommy.make(User, 3)
+
+        self.client.force_login(self.user[0])
+
+        self.user[0].groups.set([self.group[0].id])
+        self.user[0].blockeduser.set([self.user[1].id])
+        self.user[1].groups.set([self.group[0].id, self.group[1].id])
+        self.user[2].groups.set([self.group[0].id])
+
+        self.message0 = mommy.make(
+            Messages,
+            group_message_id=self.group[0].id,
+            user_message_id=self.user[0].id,
+            date="2022-06-12T00:00:00Z"
+        )
+        self.message0.status.set([self.user[0].id])
+
+        self.message1 = mommy.make(
+            Messages,
+            group_message_id=self.group[0].id,
+            user_message_id=self.user[1].id,
+            date="2022-06-13T00:00:00Z"
+        )
+
+        self.message2 = mommy.make(
+            Messages,
+            group_message_id=self.group[0].id,
+            user_message_id=self.user[2].id,
+            date="2022-06-14T00:00:00Z"
+        )
+
     def test_list_filter_message_text_right_value(self):
         query_parameter = '?text=' + self.message0.text
         url = reverse('chat', kwargs={'pk': self.group[0].id}) + query_parameter
@@ -152,13 +180,67 @@ class ChatOtherTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
 
-    """
     def test_list_filter_message_date_exact_available_value(self):
         query_parameter = '?date=' + self.message0.date
-        url = reverse('chat', kwargs={'pk': 1}) + query_parameter
+        url = reverse('chat', kwargs={'pk': self.group[0].id}) + query_parameter
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['text'], self.message0.date)
-    """
+        self.assertEqual(response.data[0]['date'], self.message0.date)
+
+    def test_list_filter_message_date_exact_unavailable_value(self):
+        query_parameter = '?dategte=' + '4000-06-18 00:00:00'
+        url = reverse('chat', kwargs={'pk': self.group[0].id}) + query_parameter
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+    def test_list_filter_message_date_gte_available_value(self):
+        query_parameter = '?dategte=' + self.message1.date
+        url = reverse('chat', kwargs={'pk': self.group[0].id}) + query_parameter
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['text'], self.message1.text)
+        self.assertEqual(response.data[1]['text'], self.message2.text)
+
+    def test_list_filter_message_date_gte_unavailable_value(self):
+        query_parameter = '?dategte=' + '4000-06-18 00:00:00'
+        url = reverse('chat', kwargs={'pk': self.group[0].id}) + query_parameter
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+    def test_list_filter_message_date_lte_available_value(self):
+        query_parameter = '?date__lte=' + self.message2.date
+        url = reverse('chat', kwargs={'pk': self.group[0].id}) + query_parameter
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assertEqual(response.data[0]['text'], self.message0.text)
+        self.assertEqual(response.data[1]['text'], self.message1.text)
+        self.assertEqual(response.data[2]['text'], self.message2.text)
+
+    def test_list_filter_message_date_lte_unavailable_value(self):
+        query_parameter = '?date__lte=' + '1000-06-18 00:00:00'
+        url = reverse('chat', kwargs={'pk': self.group[0].id}) + query_parameter
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+    def test_list_filter_message_unavailable_query_param(self):
+        query_parameter = '?sth=' + '1000'
+        url = reverse('chat', kwargs={'pk': self.group[0].id}) + query_parameter
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assertEqual(response.data[0]['text'], self.message0.text)
+        self.assertEqual(response.data[1]['text'], self.message1.text)
+        self.assertEqual(response.data[2]['text'], self.message2.text)
