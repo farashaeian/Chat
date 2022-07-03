@@ -3,7 +3,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from chatroom.models import User
 from django.contrib.auth.models import Group
-from collections import OrderedDict
 
 
 class GroupTests(APITestCase):
