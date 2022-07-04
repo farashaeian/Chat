@@ -81,7 +81,13 @@ class Chat(generics.ListCreateAPIView):
         # to apply filters on queryset,
         # have to use filter_queryset() in overridden list method
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = ChatModelSerializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True)
+        # serializer = ChatModelSerializer(queryset, many=True)
+        # pagination
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         # associate retrieved messages to the current user
         current_user = self.request.user
         current_user.messages_set.add(*queryset)
