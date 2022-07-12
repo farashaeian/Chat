@@ -48,7 +48,7 @@ class BlockUser(generics.UpdateAPIView):
 
 class MessageFilter(filters.FilterSet):
     dategte = filters.DateTimeFilter(field_name='date', lookup_expr='gte')
-    # note: we shouldn't put dateage in fields dictionary.
+    # note: we shouldn't put dategte in fields dictionary.
 
     class Meta:
         model = Messages
