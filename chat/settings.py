@@ -88,6 +88,7 @@ WSGI_APPLICATION = 'chat.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
+# database setting  difference in windows: 'USER': 'postgres',
 
 DATABASES = {
     'default': {
@@ -95,7 +96,7 @@ DATABASES = {
 
         'NAME': 'chat_db',
 
-        'USER': 'postgres',
+        'USER': 'zahra',
 
         'PASSWORD': '1234',
 
@@ -104,7 +105,6 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
